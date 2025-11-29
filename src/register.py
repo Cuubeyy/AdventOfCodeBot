@@ -4,6 +4,7 @@ from logging import critical, debug, error, info, warning
 import discord
 
 from src.Leaderboard import Leaderboard
+from src.config import GITHUB_LINK
 from src.utils import build_embed
 
 
@@ -43,7 +44,7 @@ async def send_registered_users(ctx):
     embed = build_embed(
         "Registered Users", 
         "The list of users who have registered their Discord ID with an Advent of Code username.",
-        "https://github.com/bensonalec/AdventOfCodeBot",
+        GITHUB_LINK,
         discord.Color.red(),
         fields
     )

@@ -5,7 +5,7 @@ import discord
 import requests
 import simplejson
 
-from src.config import SESSION_COOKIE, URL, YEAR
+from src.config import SESSION_COOKIE, URL, YEAR, GITHUB_LINK
 
 
 def truncate_name(name):
@@ -13,7 +13,7 @@ def truncate_name(name):
 
 def get_stars(player):
     string = []
-    for day in range(0, 25):
+    for day in range(0, 12):
         string.append(str(player.days[day]))
     return "".join(string) 
 
@@ -35,7 +35,7 @@ def build_embed(title, description, url, color, fields):
 def build_leaderboard_embed(title: str, first_place: str, leaderboard):
     fields = [
         (f"{title} Leaderboard", leaderboard, False),
-        ("\u200BGithub:", "https://github.com/TheFutureGadgetsLab/AdventOfCodeBot", False)
+        ("\u200BGithub:", GITHUB_LINK, False)
     ]
     embed = build_embed(
         f"Advent of Code {YEAR}", 

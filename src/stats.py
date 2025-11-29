@@ -3,7 +3,7 @@ from logging import critical, debug, error, info, warning
 
 import discord
 
-from src.config import YEAR
+from src.config import YEAR, COMMAND_PREFIX, GITHUB_LINK
 from src.Leaderboard import Leaderboard
 from src.utils import build_embed
 
@@ -12,12 +12,12 @@ async def run_stats(ctx, args):
     username = args
     player = None
 
-    #asking for another players stats
+    # asking for another players stats
     if username:
         with shelve.open('hachikuji.mayoi') as db:
             leaderboard = Leaderboard(db)
             player = next((pl for pl in leaderboard.players if pl.name.lower() == username), None)
-    #asking for personal stats
+    # asking for personal stats
     else:
         try:
             with shelve.open('hachikuji.mayoi') as db:
@@ -26,7 +26,7 @@ async def run_stats(ctx, args):
                 player = [pl for pl in leaderboard.players if pl.name.lower() == myUser['username'].lower()][0]
         except KeyError:
             warning(f'user {ctx.author} not registered')
-            await ctx.message.channel.send("No user associated with your discord ID. Use `!register [AOC_USERNAME]` to associate")
+            await ctx.message.channel.send(f"No user associated with your discord ID. Use `{COMMAND_PREFIX}register [AOC_USERNAME]` to associate")
             return
     if not player:
         warning(f'user {username} not found on scoreboard')
@@ -38,8 +38,9 @@ async def run_stats(ctx, args):
             ("Stars", f"{player.stars} ⭐'s.\n{player.build_stars()}", False),
             ("Averages", f"Average time to finish each day: `{averages[0]}`\nAverage time to finish part one: `{averages[1]}`\nAverage time to finish part two: `{averages[2]}`", False),
             ("Details", f"```{player.build_detailed_days()[0:1023-6]}```", False),
-            ("\u200BGithub:", "https://github.com/TheFutureGadgetsLab/AdventOfCodeBot", False)
+            ("\u200BGithub:", GITHUB_LINK, False)
         ]
-        embed = build_embed(f"Advent of Code {YEAR}", f"Individual stats for {player.name}!", "https://adventofcode.com", discord.Color.red(), fields)
+        embed = build_embed(f"Advent of Code {YEAR}", f"Individual stats for {player.name}!",
+                            "https://adventofcode.com", discord.Color.red(), fields)
 
         await ctx.message.channel.send(embed=embed)

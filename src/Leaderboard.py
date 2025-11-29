@@ -4,8 +4,8 @@ from src.Player import Player
 from src.utils import get_stars, query_leaderboard_API, truncate_name
 
 HEADER = """
-Day                1111111111222222
-          1234567890123456789012345\
+Day                111
+          123456789012\
 """
 
 class Leaderboard:
@@ -22,11 +22,11 @@ class Leaderboard:
         self.players = sorted(self.players, key=lambda player: player.score, reverse=True)
 
     def custom_leaderboard(self):
-        return self.build_embed(self.custom_scores())
+        return self.build_embed({player: player.score for player in list(self.players_sorted_custom())[:20]})
     
     def custom_scores(self):
         scores = {player: 0 for player in self.players}
-        for day in range(0,25):
+        for day in range(0, 12):
             part1 = sorted([
                 (player, player.days[day].part1_time) for player in self.players if player.days[day].part1_time
             ], key=lambda tup: tup[-1])
@@ -48,17 +48,17 @@ class Leaderboard:
         return sorted(self.players, key=lambda player: scores[player], reverse=True)
 
     def public_leaderboard(self) -> str:
-        return self.build_embed({player: player.score for player in self.players})
+        return self.build_embed({player: player.score for player in list(self.players_sorted_public())[:20]})
 
     def build_embed(self, scores: dict):
         ls = [HEADER]
         for pos, (player, score) in enumerate(scores.items()):
-            ls.append(f"{pos: 3}) {score: 4} {get_stars(player)} {truncate_name(player.name)}")
+            ls.append(f"{pos+1: 3}) {score: 4} {get_stars(player)} {truncate_name(player.name)}")
         return "```\n{}```".format("\n".join(ls))
 
     def merge_shelf(self, db):
         registered_players = [x['username'].lower() for x in db.values()]
-        inverted_db = {v['username'].lower(): {'start_times': v['start_times'], 'discord': k} for k,v in db.items()}
+        inverted_db = {v['username'].lower(): {'start_times': v['start_times'], 'discord': k} for k, v in db.items()}
         for player in self.players:
             if player.name.lower() not in registered_players:
                 debug(f"in merge_self: '{player.name}' is not in registered_players")
@@ -66,5 +66,5 @@ class Leaderboard:
 
             player.discord = inverted_db[player.name.lower()]['discord']
             for problem in player.days:
-                if(inverted_db[player.name.lower()]['start_times'][problem.day-1]):
+                if inverted_db[player.name.lower()]['start_times'][problem.day - 1]:
                     problem.start_time = inverted_db[player.name.lower()]['start_times'][problem.day-1]

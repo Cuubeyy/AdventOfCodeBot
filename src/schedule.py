@@ -10,11 +10,17 @@ from src.Leaderboard import Leaderboard
 from src.utils import build_leaderboard_embed
 
 scheduler = AsyncIOScheduler()
-scheduler.start()
+
+
+async def init_scheduler():
+    if not scheduler.running:
+        scheduler.start()
+        debug('Scheduler started!')
+
 
 async def run_schedule(ctx, arg):
     if not arg:
-        #send the next scheduled send time
+        # send the next scheduled send time
         try:
             with shelve.open('senjougahara.hitagi') as db:
                 hours, minutes = db["scoreboard_send_time"]
@@ -26,24 +32,26 @@ async def run_schedule(ctx, arg):
 
     if len(arg) < 2:
         warning(f"invalid schedule input '{arg}'")
-        await ctx.message.channel.send("Invalid input. Usage: !schedule +/-offset (where offset is time before (-) or after (+) open).")
+        await ctx.message.channel.send(
+            "Invalid input. Usage: !schedule +/-offset (where offset is time before (-) or after (+) open).")
         return
 
     indicator = arg[0]
     offset = arg[1:]
-    #check that the input is valid
-    if not(indicator in ["-", "+"] and offset.isnumeric()):
+    # check that the input is valid
+    if not (indicator in ["-", "+"] and offset.isnumeric()):
         warning(f"invalid schedule input '{arg}'")
-        await ctx.message.channel.send("Invalid input. Usage: !schedule +/-offset (where offset is time before (-) or after (+) open).")
+        await ctx.message.channel.send(
+            "Invalid input. Usage: !schedule +/-offset (where offset is time before (-) or after (+) open).")
         return
 
-    #store that offset
+    # store that offset
     if indicator == "-":
         minutes = - int(offset)
     else:
         minutes = int(offset)
 
-    hours =  24 - (abs(minutes // 60)) if indicator == "-" else abs(minutes) // 60
+    hours = 24 - (abs(minutes // 60)) if indicator == "-" else abs(minutes) // 60
     minutes = minutes % 60
     print(hours, minutes)
     with shelve.open('senjougahara.hitagi') as db:
@@ -52,33 +60,36 @@ async def run_schedule(ctx, arg):
     #initializing scheduler
     await schedule_job(ctx)
 
+
 async def schedule_job(ctx):
     with shelve.open('senjougahara.hitagi') as db:
         hours, minutes = db["scoreboard_send_time"]
     scheduler.remove_all_jobs()
     if datetime.now().month >= 11:
         scheduler.add_job(
-            send_scheduled_message, 
+            send_scheduled_message,
             CronTrigger(
-                hour=str(hours), 
-                minute=str(minutes), 
-                second="0", 
+                hour=str(hours),
+                minute=str(minutes),
+                second="0",
                 timezone=EST
-            ), 
+            ),
             args=[ctx]
-        ) 
-        await ctx.message.channel.send(f"Successfully added scheduled time! The next scheduled scoreboard will send at {hours}:{minutes} EST.")
+        )
+        await ctx.message.channel.send(
+            f"Successfully added scheduled time! The next scheduled scoreboard will send at {hours}:{minutes} EST.")
     else:
         warning("No longer scheduling scoreboard messages, as it is not November or December")
         ctx.message.channel.send("No longer scheduling scoreboard messages, as it is not November or December.")
+
 
 async def send_scheduled_message(ctx):
     with shelve.open('hachikuji.mayoi') as db:
         leaderboard = Leaderboard(db)
         await ctx.message.channel.send(
             embed=build_leaderboard_embed(
-                "Custom", 
-                leaderboard.players[0].name, 
+                "Custom",
+                leaderboard.players[0].name,
                 leaderboard.custom_leaderboard()
             )
         )
